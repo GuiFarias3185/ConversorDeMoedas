@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-br" <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conversor de Moedas</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f3f4f6;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        flex-direction: column;
+    }
+
+    .container {
+        text-align: center;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 600px;
+    }
+
+    h1 {
+        margin-bottom: 20px;
+        color: #333;
+    }
+
+    .converter {
+        margin-bottom: 20px;
+    }
+
+    input,
+    select,
+    button {
+        padding: 10px;
+        margin: 5px 0;
+        width: 100%;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #0056b3;
+    }
+
+    #result {
+        font-size: 1.2em;
+        color: #333;
+        margin-top: 10px;
+    }
+
+    #currencyInfo {
+        margin-top: 20px;
+        font-size: 0.9em;
+        color: #555;
+        text-align: left;
+    }
+
+    #currencyInfo img {
+        width: 50px;
+        height: auto;
+        vertical-align: middle;
+        margin-right: 10px;
+    }
+
+    .info-text {
+        text-align: center;
+        margin-top: 30px;
+        font-size: 1.1em;
+        color: #333;
+    }
+
+    .info-text p {
+        max-width: 800px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+</style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Conversor de Moedas</h1>
+        <div class="converter">
+            <input type="number" id="inputAmount" placeholder="Digite o valor" oninput="convertCurrency()">
+            <select id="fromCurrency" onchange="convertCurrency()">
+                <option value="USD">Dólar (USD)</option>
+                <option value="EUR">Euro (EUR)</option>
+                <option value="BRL">Real (BRL)</option>
+            </select>
+            <select id="toCurrency" onchange="convertCurrency()">
+                <option value="BRL">Real (BRL)</option>
+                <option value="USD">Dólar (USD)</option>
+                <option value="EUR">Euro (EUR)</option>
+            </select>
+            <button onclick="convertCurrency()">Converter</button>
+        </div>
+        <div id="result"></div>
+        <div id="currencyInfo"></div>
+    </div>
+
+    <div class="info-text">
+        <p>
+            O Conversor de Moedas é uma ferramenta simples para ajudá-lo a converter valores entre diferentes moedas.
+            Escolha a moeda de origem e a moeda de destino, insira o valor a ser convertido e veja o resultado
+            instantaneamente. As taxas de câmbio são obtidas em tempo real.
+        </p>
+        <p>
+            Use este conversor para realizar conversões rápidas entre Dólar Americano (USD), Euro (EUR) e Real
+            Brasileiro (BRL).
+        </p>
+    </div>
+
+    <script>
+        // Função para obter a taxa de câmbio em tempo real da API
+        async function getExchangeRate(fromCurrency, toCurrency) {
+            const apiKey = "01533cfaec3936305eab1223"; // Sua chave de API fornecida
+            const url = `https://v6.exchangerate-api.com/v6/${apiKey}/latest/${fromCurrency}`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Erro ao buscar dados: ${response.statusText}`);
+                }
+                const data = await response.json();
+
+                if (data.result === "success") {
+                    return data.conversion_rates[toCurrency];
+                } else {
+                    throw new Error("Erro ao processar as taxas de câmbio.");
+                }
+            } catch (error) {
+                console.error("Erro ao buscar as taxas de câmbio:", error);
+                alert("Erro ao buscar taxas de câmbio. Tente novamente mais tarde.");
+            }
+        }
+
+        // Função para converter as moedas
+        async function convertCurrency() {
+            const amount = parseFloat(document.getElementById("inputAmount").value);
+            const fromCurrency = document.getElementById("fromCurrency").value;
+            const toCurrency = document.getElementById("toCurrency").value;
+            const resultDiv = document.getElementById("result");
+            const infoDiv = document.getElementById("currencyInfo");
+
+            if (isNaN(amount) || amount <= 0) {
+                resultDiv.textContent = "Por favor, insira um valor válido.";
+                infoDiv.textContent = "";
+                return;
+            }
+
+            if (fromCurrency === toCurrency) {
+                resultDiv.textContent = `Você já está na mesma moeda: ${amount} ${fromCurrency}.`;
+                infoDiv.textContent = "";
+                return;
+            }
+
+            // Buscar taxa de câmbio
+            const rate = await getExchangeRate(fromCurrency, toCurrency);
+            if (!rate) return;
+
+            const convertedAmount = amount * rate;
+            resultDiv.textContent = `${amount} ${fromCurrency} é igual a ${convertedAmount.toFixed(2)} ${toCurrency}.`;
+
+            // Informações sobre as moedas com imagens
+            const currencyDescriptions = {
+                USD: {
+                    text: "O dólar americano (USD) é a moeda oficial dos Estados Unidos e uma das moedas mais utilizadas em transações internacionais.",
+                    img: "https://via.placeholder.com/50?text=USD"
+                },
+                BRL: {
+                    text: "O real brasileiro (BRL) é a moeda oficial do Brasil, introduzida em 1994 como parte do Plano Real.",
+                    img: "https://via.placeholder.com/50?text=BRL"
+                },
+                EUR: {
+                    text: "O euro (EUR) é a moeda oficial da zona do euro, utilizada por 19 dos 27 estados-membros da União Europeia.",
+                    img: "https://via.placeholder.com/50?text=EUR"
+                }
+            };
+
+            const fromInfo = currencyDescriptions[fromCurrency];
+            const toInfo = currencyDescriptions[toCurrency];
+
+            infoDiv.innerHTML = `
+        <p><img src="${fromInfo.img}" alt="${fromCurrency}"> <strong>De:</strong> ${fromInfo.text}</p>
+        <p><img src="${toInfo.img}" alt="${toCurrency}"> <strong>Para:</strong> ${toInfo.text}</p>
+      `;
+        }
+    </script>
+</body>
+
+</html>
